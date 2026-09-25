@@ -12,13 +12,16 @@ namespace Game.Abstractions.Repositories
     public interface IUnitOfWork
     {
         /// <summary>遊戲 Repository</summary>
-        IGameResultRepository Games { get; }
+        IGameRepository Games { get; }
 
         /// <summary>遊戲結果 Repository</summary>
         IGameResultRepository GameResults { get; }
 
         /// <summary>開始交易</summary>
         Task BeginTransactionAsync(CancellationToken cancellationToken = default);
+        /// <summary>提交交易</summary>
+        Task CommitAsync(CancellationToken cancellationToken = default);
+
         /// <summary>回滾交易</summary> 
         Task RollbackAsync(CancellationToken cancellationToken = default);
     }
