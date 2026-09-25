@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="Game.Abstractions/Game.Abstractions.csproj" />
   <Project Path="Game.Application/Game.Application.csproj" />
   <Project Path="Game.Domain/Game.Domain.csproj" />
   <Project Path="Game.Infrastructure/Game.Infrastructure.csproj" />
