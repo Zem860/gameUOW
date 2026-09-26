@@ -12,7 +12,8 @@ namespace Game.Abstractions.Repositories
         /// </summary>
         Task InsertAsync(GameResult gameResult, CancellationToken cancellationToken = default);
         /// <summary>
-        /// 取得指定遊戲最高分數的錢N比 （Redis 故障時的排行榜來源）
+        /// 取得指定遊戲最高分數的前N筆 （Redis 故障時的排行榜來源）
+        /// </summary>
         Task<IReadOnlyList<GameResult>> GetTopScoreAsync(string gameId, int count, CancellationToken cancellationToken = default);
     }
 
