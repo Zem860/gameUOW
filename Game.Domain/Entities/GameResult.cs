@@ -5,7 +5,8 @@ namespace Game.Domain.Entities
     /// </summary>
     public class GameResult
     {
-        /// <su                 /// 結果 Id（gameResultId：Server 於 /start 預先產生並簽進 HMAC，存檔時直接當 MongoDB _id，天然唯一）
+        /// <summary>                
+        /// 結果 Id（gameResultId：Server 於 /start 預先產生並簽進 HMAC，存檔時直接當 MongoDB _id，天然唯一）
         /// </summary>
         public string Id { get; set; } = string.Empty;
 
@@ -41,8 +42,6 @@ namespace Game.Domain.Entities
 
         /// <summary>
         /// 票券隨機值（Server 於 /start 產生並簽進 HMAC；MongoDB Unique Index 為第二層防重複兌換）
-        /// <summary>
-        /// 票券隨機值
         /// </summary>
         public string Nonce { get; set; } = string.Empty;
 
