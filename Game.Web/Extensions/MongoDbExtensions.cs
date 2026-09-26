@@ -1,5 +1,6 @@
 using Game.Abstractions.Settings;
 using MongoDB.Driver;
+using Game.Infrastructure.MongoDb;
 
 namespace Game.Web.Extensions
 {
@@ -19,6 +20,8 @@ namespace Game.Web.Extensions
             this IServiceCollection services,
             IConfiguration configuration)
         {
+            // 註冊 Mongo 全域的序列化規則（不是 DI，Driver 轉換 BSON 時會自動套用）
+            MongoDbMappings.Register();
             // 取出appsettings中的 MongoDb 區塊，依屬性名稱填成 MongoDbSettings
             IConfigurationSection mongoDbSection = configuration.GetSection(MongoDbSettings.SectionName);
             MongoDbSettings settings = mongoDbSection.Get<MongoDbSettings>() ?? new MongoDbSettings();
@@ -40,8 +43,10 @@ namespace Game.Web.Extensions
 
             // MongoClient 內含連線池且執行緒安全，整個應用程式共用一個
             services.AddSingleton<IMongoClient>(_ => new MongoClient(settings.ConnectionString));
-            services.AddSingleton<IMongoDatabase>(sp =>
-                sp.GetRequiredService<IMongoClient>().GetDatabase(settings.DatabaseName));
+            ///EF 的對應規則在 DbContext 裡面，所以感覺跟 DI 是綁在一起的。Mongo Driver
+            /// 的設計不一樣，規則放在 static 全域表，所以 MongoDbMappings 才會看起來像是自己獨立在跑。
+            services.AddSingleton<IMongoDatabase>(servicesProvider =>
+                servicesProvider.GetRequiredService<IMongoClient>().GetDatabase(settings.DatabaseName));
 
             return services;
         }
