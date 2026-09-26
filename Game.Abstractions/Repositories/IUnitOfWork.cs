@@ -22,8 +22,26 @@ namespace Game.Abstractions.Repositories
         /// <summary>提交交易</summary>
         Task CommitAsync(CancellationToken cancellationToken = default);
 
-        /// <summary>回滾交易</summary> 
+        /// <summary>回滾交易</summary>
         Task RollbackAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 在同一個 MongoDB 交易中執行作業。
+        /// <para>作業成功 → 自動 Commit；作業拋出例外 → 自動 Rollback（Abort）。</para>
+        /// <para>遇到暫時性錯誤（TransientTransactionError / UnknownTransactionCommitResult）會自動重試；
+        /// 實作以 MongoDB Driver 的 <c>WithTransactionAsync</c> 包裝。</para>
+        /// </summary>
+        /// <remarks>
+        /// Application Service 一律使用此方法；<see cref="BeginTransactionAsync"/> / <see cref="CommitAsync"/> / <see cref="RollbackAsync"/> 保留給特殊情況。
+        /// <para>注意：作業可能因重試被執行多次，不可在其中呼叫 Redis 等不受 MongoDB 交易控制的外部服務，
+        /// 那些要放在本方法完成之後。</para>
+        /// <para>作業內呼叫 Repository 當下就會寫入（在交易中，Commit 前其他人看不到），不需要另外存檔。</para>
+        /// </remarks>
+        /// <param name="operation">要在交易中執行的作業；參數為取消權杖。</param>
+        /// <param name="cancellationToken">取消權杖。</param>
+        Task ExecuteInTransactionAsync(
+            Func<CancellationToken, Task> operation,
+            CancellationToken cancellationToken = default);
     }
 
 }
