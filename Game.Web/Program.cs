@@ -14,6 +14,8 @@ if (builder.Environment.IsDevelopment())
 builder.Services.AddMongoDbServices(builder.Configuration);
 builder.Services.AddHmacServices(builder.Configuration);
 builder.Services.AddConventionalServices();
+ // 系統時鐘：服務一律用 TimeProvider.GetUtcNow() 取時間，測試時可換成假時鐘
+builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
