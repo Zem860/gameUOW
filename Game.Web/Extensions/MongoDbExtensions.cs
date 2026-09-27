@@ -1,6 +1,8 @@
+using Game.Abstractions.Repositories;
 using Game.Abstractions.Settings;
-using MongoDB.Driver;
 using Game.Infrastructure.MongoDb;
+using Game.Infrastructure.MongoDb.Repositories;
+using MongoDB.Driver;
 
 namespace Game.Web.Extensions
 {
@@ -10,7 +12,7 @@ namespace Game.Web.Extensions
     public static class MongoDbExtensions
     {
         /// <summary>
-        /// 註冊 MongoDB 服務（設定、Client、Database）
+        /// 註冊 MongoDB 服務（對應規則、設定、Client、Database、泛型 Repository）
         /// </summary>
         /// <param name="services">服務集合</param>
         /// <param name="configuration">配置</param>
@@ -43,10 +45,16 @@ namespace Game.Web.Extensions
 
             // MongoClient 內含連線池且執行緒安全，整個應用程式共用一個
             services.AddSingleton<IMongoClient>(_ => new MongoClient(settings.ConnectionString));
-            ///EF 的對應規則在 DbContext 裡面，所以感覺跟 DI 是綁在一起的。Mongo Driver
-            /// 的設計不一樣，規則放在 static 全域表，所以 MongoDbMappings 才會看起來像是自己獨立在跑。
+
+            // Database 只能從 Client 取得，所以先跟容器拿 Client
             services.AddSingleton<IMongoDatabase>(servicesProvider =>
                 servicesProvider.GetRequiredService<IMongoClient>().GetDatabase(settings.DatabaseName));
+
+            // 開放泛型掃描不到，要手動登記；
+            // 有人要 IReadRepository<GameInfo> 時，DI 會自動建立 ReadRepository<GameInfo>
+            // Scoped：WriteRepository 才會與 UnitOfWork 拿到同一個 MongoSessionAccessor
+            services.AddScoped(typeof(IReadRepository<>), typeof(ReadRepository<>));
+            services.AddScoped(typeof(IWriteRepository<>), typeof(WriteRepository<>));
 
             return services;
         }
