@@ -1,23 +1,34 @@
-var builder = WebApplication.CreateBuilder(args);
+ using Game.Web.Extensions;
 
-// Add services to the container.
+  var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+  // 本機機密（連線字串）放在 gitignore 的檔案，只在開發環境載入；
+  // 一定要在 AddMongoDbServices 之前，因為它會立刻讀取設定並檢查
+  if (builder.Environment.IsDevelopment())
+  {
+      builder.Configuration.AddJsonFile("appsettings.Development.local.json", optional: true, reloadOnChange: true);
+  }
 
-var app = builder.Build();
+  // Add services to the container.
+  builder.Services.AddMongoDbServices(builder.Configuration);
+  builder.Services.AddConventionalServices();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+  builder.Services.AddControllers();
+  // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+  builder.Services.AddOpenApi();
 
-app.UseHttpsRedirection();
+  var app = builder.Build();
 
-app.UseAuthorization();
+  // Configure the HTTP request pipeline.
+  if (app.Environment.IsDevelopment())
+  {
+      app.MapOpenApi();
+  }
 
-app.MapControllers();
+  app.UseHttpsRedirection();
 
-app.Run();
+  app.UseAuthorization();
+
+  app.MapControllers();
+
+  app.Run();
