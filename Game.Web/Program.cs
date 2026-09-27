@@ -1,35 +1,35 @@
- using Game.Web.Extensions;
+using Game.Web.Extensions;
 
-  var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
-  // 本機機密（連線字串）放在 gitignore 的檔案，只在開發環境載入；
-  // 一定要在 AddMongoDbServices 之前，因為它會立刻讀取設定並檢查
-  if (builder.Environment.IsDevelopment())
-  {
-      builder.Configuration.AddJsonFile("appsettings.Development.local.json", optional: true, reloadOnChange: true);
-  }
+// 本機機密（連線字串）放在 gitignore 的檔案，只在開發環境載入；
+// 一定要在 AddMongoDbServices 之前，因為它會立刻讀取設定並檢查
+if (builder.Environment.IsDevelopment())
+{
+    builder.Configuration.AddJsonFile("appsettings.Development.local.json", optional: true, reloadOnChange: true);
+}
 
-  // Add services to the container.
-  builder.Services.AddMongoDbServices(builder.Configuration);
-  builder.Services.AddConventionalServices();
+// Add services to the container.
+builder.Services.AddMongoDbServices(builder.Configuration);
+builder.Services.AddConventionalServices();
 
-  builder.Services.AddControllers();
-  // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-  builder.Services.AddOpenApi();
+builder.Services.AddControllers();
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
 
-  var app = builder.Build();
-  // 建立索引與種子資料，成功後才開始接收 Request
-  await app.InitializeDatabaseAsync();
-  // Configure the HTTP request pipeline.
-  if (app.Environment.IsDevelopment())
-  {
-      app.MapOpenApi();
-  }
+var app = builder.Build();
+// 建立索引與種子資料，成功後才開始接收 Request
+await app.InitializeDatabaseAsync();
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
 
-  app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
-  app.UseAuthorization();
+app.UseAuthorization();
 
-  app.MapControllers();
+app.MapControllers();
 
-  app.Run();
+app.Run();
