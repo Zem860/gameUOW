@@ -7,7 +7,8 @@ namespace Game.Abstractions.DependencyInjection
     /// 預設情況下，實作依賴介面的類別會註冊為其實作的所有介面。
     /// 使用此屬性可以明確指定只註冊特定的介面。
     /// </remarks>
-    public class ExposeServiceAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
+    public class ExposeServicesAttribute : Attribute
     {
         /// <summary>
         /// 要暴露的服務類型陣列
@@ -24,12 +25,11 @@ namespace Game.Abstractions.DependencyInjection
         /// </summary>
         public bool IncludeDefaults { get; set; }
 
-
         /// <summary>
         /// 建立服務暴露屬性
         /// </summary>
         /// <param name="serviceTypes">要暴露的服務型別</param>
-        public ExposeServiceAttribute(params Type[] serviceTypes)
+        public ExposeServicesAttribute(params Type[] serviceTypes)
         {
             ServiceTypes = serviceTypes ?? Array.Empty<Type>();
         }
