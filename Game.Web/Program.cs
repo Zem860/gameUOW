@@ -10,7 +10,9 @@ if (builder.Environment.IsDevelopment())
 }
 
 // Add services to the container.
+// 以下是透過擴充方法註冊服務抓取appsetting的設定並開放或注入給di的其他服務使用，方便維護與測試
 builder.Services.AddMongoDbServices(builder.Configuration);
+builder.Services.AddHmacServices(builder.Configuration);   // ← 新增
 builder.Services.AddConventionalServices();
 
 builder.Services.AddControllers();
