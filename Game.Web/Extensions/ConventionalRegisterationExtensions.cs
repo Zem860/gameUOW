@@ -9,8 +9,7 @@
       /// <remarks>
       /// <para>ITransientDependency / IScopedDependency / ISingletonDependency 決定「要不要登記、生命週期」。</para>
       /// <para>[ExposeServices] 決定「用哪些介面登記」；沒貼時，實作的介面（扣掉標記介面）與類別本身都會登記。</para>
-      /// <para>泛型類別掃描不到（不知道要登記成哪種型別），要另外手動登記，例：MongoDbExtensions 的泛型
-  Repository。</para>
+      /// <para>泛型類別掃描不到（不知道要登記成哪種型別），要另外手動登記，例：MongoDbExtensions 的泛型Repository。</para>
       /// </remarks>
       public static class ConventionalRegistrationExtensions
       {
