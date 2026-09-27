@@ -18,7 +18,8 @@
   builder.Services.AddOpenApi();
 
   var app = builder.Build();
-
+  // 建立索引與種子資料，成功後才開始接收 Request
+  await app.InitializeDatabaseAsync();
   // Configure the HTTP request pipeline.
   if (app.Environment.IsDevelopment())
   {
