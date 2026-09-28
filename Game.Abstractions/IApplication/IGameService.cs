@@ -14,5 +14,14 @@ namespace Game.Abstractions.IApplication
         /// <param name="cancellationToken">取消權杖</param>
         /// <returns>遊戲票券</returns>
         Task<StartGameResponse> StartAsync(string code, CancellationToken cancellationToken = default);
+        /// <summary>
+        /// 儲存遊戲結果：驗證票券 → 檢查名字與分數 → 寫入資料庫
+        /// </summary>
+        /// <param name="request">票券 + 玩家名字 + 分數</param>
+        /// <param name="cancellationToken">取消權杖</param>
+        /// <returns>已儲存的遊戲結果識別碼</returns>
+        Task<CreateGameResultResponse> FinishAsync(
+            CreateGameResultRequest request,
+            CancellationToken cancellationToken = default);
     }
 }
