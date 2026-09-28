@@ -41,10 +41,14 @@ namespace Game.Application.Services.Games
                 throw new KeyNotFoundException($"game not found: {code}");
             }
 
+            // gameResultId 每張票都不同，存檔時成為 _id，是防重複送出的主防線；nonce 是第二層
             string gameResultId = Guid.NewGuid().ToString();
             long startedAt = _timeProvider.GetUtcNow().ToUnixTimeSeconds();
             string nonce = NonceGenerator.Generate();
+
+            // 簽章只證明「伺服器發的、沒被改過」；票券內容是公開的，不做加密
             string signature = _hmacService.Sign(BuildTicketPayload(gameResultId, game.Id, startedAt, nonce));
+
             return new StartGameResponse
             {
                 GameResultId = gameResultId,
