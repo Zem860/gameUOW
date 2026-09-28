@@ -1,5 +1,6 @@
 using System.Net;
 using Game.Abstractions.Common;
+using Game.Abstractions.Exceptions;
 
 namespace Game.Web.Middlewares
 {
@@ -87,6 +88,7 @@ namespace Game.Web.Middlewares
             {
                 KeyNotFoundException => (HttpStatusCode.NotFound, exception.Message, "NOT_FOUND"),
                 UnauthorizedAccessException => (HttpStatusCode.Unauthorized, exception.Message, "UNAUTHORIZED"),
+                DuplicateKeyException => (HttpStatusCode.Conflict, "資料重複，可能已經送出過", "DUPLICATE"),
                 ArgumentException => (HttpStatusCode.BadRequest, exception.Message, "VALIDATION_ERROR"),
 
                 // 未預期的錯誤：細節只寫進 log，不回傳給前端，避免洩漏內部資訊
