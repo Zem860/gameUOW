@@ -1,4 +1,5 @@
 using Game.Web.Extensions;
+using Game.Web.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +15,7 @@ if (builder.Environment.IsDevelopment())
 builder.Services.AddMongoDbServices(builder.Configuration);
 builder.Services.AddHmacServices(builder.Configuration);
 builder.Services.AddConventionalServices();
- // 系統時鐘：服務一律用 TimeProvider.GetUtcNow() 取時間，測試時可換成假時鐘
+// 系統時鐘：服務一律用 TimeProvider.GetUtcNow() 取時間，測試時可換成假時鐘
 builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddControllers();
@@ -22,6 +23,10 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// 最外層：攔截後續所有中介軟體與 Controller 拋出的例外，統一轉成 ApiResponse
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
 // 建立索引與種子資料，成功後才開始接收 Request
 await app.InitializeDatabaseAsync();
 // Configure the HTTP request pipeline.
