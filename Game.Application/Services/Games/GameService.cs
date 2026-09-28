@@ -18,6 +18,8 @@ namespace Game.Application.Services.Games
         private readonly IReadRepository<GameInfo> _gameRepository;
         private readonly IHmacService _hmacService;
         private readonly TimeProvider _timeProvider;
+        private readonly IWriteRepository<GameResult> _gameResultRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
         /// <summary>
         /// 建立遊戲流程服務
@@ -25,11 +27,19 @@ namespace Game.Application.Services.Games
         /// <param name="gameRepository">遊戲唯讀 Repository</param>
         /// <param name="hmacService">HMAC 簽章服務</param>
         /// <param name="timeProvider">系統時鐘</param>
-        public GameService(IReadRepository<GameInfo> gameRepository, IHmacService hmacService, TimeProvider timeProvider)
+        public GameService(
+            IReadRepository<GameInfo> gameRepository,
+            IWriteRepository<GameResult> gameResultRepository,
+            IUnitOfWork unitOfWork,
+            IHmacService hmacService,
+            TimeProvider timeProvider
+            )
         {
             _gameRepository = gameRepository;
             _hmacService = hmacService;
             _timeProvider = timeProvider;
+            _unitOfWork = unitOfWork;
+            _gameResultRepository = gameResultRepository;
         }
 
         /// <inheritdoc />
@@ -59,6 +69,51 @@ namespace Game.Application.Services.Games
             };
         }
 
+        public async Task<CreateGameResultResponse> FinishAsync(
+            CreateGameResultRequest request,
+            CancellationToken cancellationToken
+        )
+        {
+            // ① 票券是否為伺服器簽發且未被竄改
+            VerifyTicket(request);
+            // ② 名字：前後空白不算，不能全是空白
+            string playerName = request.PlayerName.Trim();
+            if (playerName.Length == 0)
+            {
+                throw new ArgumentException("玩家名字不可為空白");
+            }
+            // 分數合理性規則之後再補，目前只擋負數
+            if (request.Score < 0)
+            {
+                throw new ArgumentException("分數不可為負數");
+            }
+            // ③ 遊戲可能在發票之後被停用
+            bool gameExist = await _gameRepository.AnyAsync(game => game.Id == request.GameId && game.IsActive, cancellationToken);
+            if (!gameExist)
+            {
+                throw new KeyNotFoundException($"game not found: {request.GameId}");
+            }
+            DateTimeOffset now = _timeProvider.GetUtcNow();
+            GameResult gameResult = new()
+            {
+                Id = request.GameResultId,
+                GameId = request.GameId,
+                PlayerName = playerName,
+                Score = request.Score,
+                StartedAt = DateTimeOffset.FromUnixTimeSeconds(request.StartedAt),
+                FinishedAt = now,
+                Nonce = request.Nonce,
+                CreatedAt = now,
+            };
+            await _unitOfWork.ExecuteInTransactionAsync(
+                token => _gameResultRepository.AddAsync(gameResult, token), cancellationToken
+            );
+            return new CreateGameResultResponse
+            {
+                GameResultId = gameResult.Id,
+            };
+        }
+
         /// <summary>
         /// 驗證票券：用收到的四個欄位重組簽章內容再比對；不符代表票券被竄改或偽造
         /// </summary>
@@ -67,7 +122,7 @@ namespace Game.Application.Services.Games
         private void VerifyTicket(CreateGameResultRequest request)
         {
             string payload = BuildTicketPayload(
-                request.GameResultId,
+                  request.GameResultId,
                   request.GameId,
                   request.StartedAt,
                   request.Nonce);
