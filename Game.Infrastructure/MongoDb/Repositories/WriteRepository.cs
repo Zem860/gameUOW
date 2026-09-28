@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using Game.Abstractions.Exceptions;
 using Game.Abstractions.Repositories;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
@@ -34,13 +35,21 @@ namespace Game.Infrastructure.MongoDb.Repositories
         /// <inheritdoc />
         public async Task<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            if (Session is null)
+            try
             {
-                await Collection.InsertOneAsync(entity, cancellationToken: cancellationToken);
+                if (Session is null)
+                {
+                    await Collection.InsertOneAsync(entity, cancellationToken: cancellationToken);
+                }
+                else
+                {
+                    await Collection.InsertOneAsync(Session, entity, cancellationToken: cancellationToken);
+                }
             }
-            else
+            catch (MongoWriteException exception) when (exception.WriteError.Category == ServerErrorCategory.DuplicateKey)
             {
-                await Collection.InsertOneAsync(Session, entity, cancellationToken: cancellationToken);
+                // 轉成與資料庫無關的例外，上層不必認識 Mongo 的型別
+                throw new DuplicateKeyException($"{typeof(TEntity).Name} 資料重複", exception);
             }
 
             return entity;
