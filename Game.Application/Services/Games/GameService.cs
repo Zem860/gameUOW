@@ -60,6 +60,25 @@ namespace Game.Application.Services.Games
         }
 
         /// <summary>
+        /// 驗證票券：用收到的四個欄位重組簽章內容再比對；不符代表票券被竄改或偽造
+        /// </summary>
+        /// <param name="request">存檔請求（含票券）</param>
+        /// <exception cref="UnauthorizedAccessException">簽章不符時拋出</exception>
+        private void VerifyTicket(CreateGameResultRequest request)
+        {
+            string payload = BuildTicketPayload(
+                request.GameResultId,
+                  request.GameId,
+                  request.StartedAt,
+                  request.Nonce);
+            var match = _hmacService.Verify(payload, request.Signature);
+            if (!match)
+            {
+                throw new UnauthorizedAccessException("票券驗證失敗");
+            }
+        }
+
+        /// <summary>
         /// 組出票券的簽章內容；簽發與驗證必須用同一個方法，欄位順序與格式才會一致
         /// </summary>
         private static string BuildTicketPayload(string gameResultId, string gameId, long startedAt, string nonce)
