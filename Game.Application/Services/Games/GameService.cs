@@ -25,6 +25,8 @@ namespace Game.Application.Services.Games
         /// 建立遊戲流程服務
         /// </summary>
         /// <param name="gameRepository">遊戲唯讀 Repository</param>
+        /// <param name="gameResultRepository">遊戲結果寫入 Repository</param>
+        /// <param name="unitOfWork">工作單元（交易）</param>
         /// <param name="hmacService">HMAC 簽章服務</param>
         /// <param name="timeProvider">系統時鐘</param>
         public GameService(
@@ -42,7 +44,13 @@ namespace Game.Application.Services.Games
             _gameResultRepository = gameResultRepository;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// 開始遊戲：確認遊戲存在且啟用，簽發遊戲票券（不寫入資料庫）
+        /// </summary>
+        /// <param name="code">遊戲代碼（例如 snake）</param>
+        /// <param name="cancellationToken">取消權杖</param>
+        /// <returns>遊戲票券（gameResultId、gameId、startedAt、nonce、signature）</returns>
+        /// <exception cref="KeyNotFoundException">遊戲不存在或已停用</exception>
         public async Task<StartGameResponse> StartAsync(string code, CancellationToken cancellationToken = default)
         {
             GameInfo? game = await _gameRepository.FirstOrDefaultAsync(game => game.Code == code && game.IsActive, cancellationToken);
@@ -69,6 +77,15 @@ namespace Game.Application.Services.Games
             };
         }
 
+        /// <summary>
+        /// 儲存遊戲結果：驗證票券 → 檢查名字與分數 → 確認遊戲仍啟用 → 寫入資料庫 → 更新排行榜快取
+        /// </summary>
+        /// <param name="request">票券 + 玩家名字 + 分數</param>
+        /// <param name="cancellationToken">取消權杖</param>
+        /// <returns>已儲存的遊戲結果識別碼</returns>
+        /// <exception cref="UnauthorizedAccessException">票券簽章不符（被竄改或偽造）</exception>
+        /// <exception cref="ArgumentException">名字全為空白，或分數為負數</exception>
+        /// <exception cref="KeyNotFoundException">遊戲不存在或已停用</exception>
         public async Task<CreateGameResultResponse> FinishAsync(
             CreateGameResultRequest request,
             CancellationToken cancellationToken
@@ -105,6 +122,11 @@ namespace Game.Application.Services.Games
                 Nonce = request.Nonce,
                 CreatedAt = now,
             };
+
+            // 寫入交給 UoW 的交易：成功自動 Commit、例外自動 Rollback、暫時性錯誤會重跑整個 lambda。
+            // token：Driver 呼叫 lambda 時給的取消權杖（源自外面的 cancellationToken），照規矩往下傳給 AddAsync，
+            //        玩家中途斷線時 Mongo 的寫入就會停止等待；
+            // gameResult：lambda 從外面「借」來的變數（closure），所以參數只需要 token
             await _unitOfWork.ExecuteInTransactionAsync(
                 token => _gameResultRepository.AddAsync(gameResult, token), cancellationToken
             );

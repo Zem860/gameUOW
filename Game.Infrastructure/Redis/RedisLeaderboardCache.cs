@@ -16,7 +16,11 @@ namespace Game.Infrastructure.Redis
             _redis = redis;
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// 加入一筆成績：以交易（MULTI / EXEC）同時寫入名字（Hash）與分數（Sorted Set）
+        /// </summary>
+        /// <param name="gameId">遊戲 Id（組成 key：leaderboard:{gameId}）</param>
+        /// <param name="entry">成績（gameResultId、玩家名稱、分數）</param>
         public async Task AddAsync(string gameId, LeaderboardEntry entry)
         {
             IDatabase db = _redis.GetDatabase();
@@ -34,7 +38,12 @@ namespace Game.Infrastructure.Redis
             await transaction.ExecuteAsync();
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// 取得分數最高的前 N 筆：先從 Sorted Set 取 id 與分數（由高到低），再從 Hash 一次取回名字
+        /// </summary>
+        /// <param name="gameId">遊戲 Id</param>
+        /// <param name="count">筆數</param>
+        /// <returns>前 N 筆成績；快取沒有資料時回傳空集合</returns>
         public async Task<IReadOnlyList<LeaderboardEntry>> GetTopAsync(string gameId, int count)
         {
             IDatabase db = _redis.GetDatabase();
