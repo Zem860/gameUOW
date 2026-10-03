@@ -21,19 +21,20 @@ namespace Game.Infrastructure.Redis
         {
             IDatabase db = _redis.GetDatabase();
 
+            // MULTI：名字與分數放在同一個交易，一起執行，不會只寫進一半
             ITransaction transaction = db.CreateTransaction();
-            // 這兩行只是「排進交易」，此時還沒送出；不可以 await，要等 ExecuteAsync 之後才會完成
-            // HSET leaderboard:{gameId}:names {gameResultId} {playerName}
 
             // 這兩行只是「排進交易」，此時還沒送出；不可以 await，要等 ExecuteAsync 之後才會完成
             // HSET leaderboard:{gameId}:names {gameResultId} {playerName}
             _ = transaction.HashSetAsync(NamesKey(gameId), entry.GameResultId, entry.PlayerName);
             // ZADD leaderboard:{gameId} {score} {gameResultId}
             _ = transaction.SortedSetAddAsync(ScoresKey(gameId), entry.GameResultId, entry.Score);
+
+            // EXEC：一次送出並執行
             await transaction.ExecuteAsync();
         }
 
-
+        /// <inheritdoc />
         public async Task<IReadOnlyList<LeaderboardEntry>> GetTopAsync(string gameId, int count)
         {
             IDatabase db = _redis.GetDatabase();
