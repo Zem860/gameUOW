@@ -6,6 +6,9 @@ using Game.Abstractions.IApplication.Security;
 using Game.Abstractions.Repositories;
 using Game.Application.Utils;
 using Game.Domain.Entities;
+using Game.Abstractions.Caching;
+using Game.Abstractions.Dtos.Leaderboard;
+using Microsoft.Extensions.Logging;
 
 namespace Game.Application.Services.Games
 {
@@ -21,6 +24,9 @@ namespace Game.Application.Services.Games
         private readonly IWriteRepository<GameResult> _gameResultRepository;
         private readonly IUnitOfWork _unitOfWork;
 
+        private readonly ILeaderboardCache _leaderboardCache;
+        private readonly ILogger<GameService> _logger;
+
         /// <summary>
         /// 建立遊戲流程服務
         /// </summary>
@@ -29,12 +35,16 @@ namespace Game.Application.Services.Games
         /// <param name="unitOfWork">工作單元（交易）</param>
         /// <param name="hmacService">HMAC 簽章服務</param>
         /// <param name="timeProvider">系統時鐘</param>
+        /// <param name="leaderboardCache">排行榜快取</param>
+        /// <param name="logger">記錄器</param>
         public GameService(
             IReadRepository<GameInfo> gameRepository,
             IWriteRepository<GameResult> gameResultRepository,
             IUnitOfWork unitOfWork,
             IHmacService hmacService,
-            TimeProvider timeProvider
+            TimeProvider timeProvider,
+            ILeaderboardCache leaderboardCache,
+            ILogger<GameService> logger
             )
         {
             _gameRepository = gameRepository;
@@ -42,6 +52,8 @@ namespace Game.Application.Services.Games
             _timeProvider = timeProvider;
             _unitOfWork = unitOfWork;
             _gameResultRepository = gameResultRepository;
+            _leaderboardCache = leaderboardCache;
+            _logger = logger;
         }
 
         /// <summary>
@@ -130,10 +142,35 @@ namespace Game.Application.Services.Games
             await _unitOfWork.ExecuteInTransactionAsync(
                 token => _gameResultRepository.AddAsync(gameResult, token), cancellationToken
             );
+
+            // ④ 更新排行榜快取：放在交易完成之後（交易可能重試，放在裡面 Redis 會被寫好幾次）
+            await AddToLeaderboardAsync(gameResult);
+
             return new CreateGameResultResponse
             {
                 GameResultId = gameResult.Id,
             };
+        }
+
+        /// <summary>
+        /// 將成績寫入排行榜快取；快取失敗只記 warning，不影響存檔結果（Mongo 才是真相來源）
+        /// </summary>
+        /// <param name="gameResult">已存進 Mongo 的遊戲結果</param>
+        private async Task AddToLeaderboardAsync(GameResult gameResult)
+        {
+            try
+            {
+                await _leaderboardCache.AddAsync(gameResult.GameId, new LeaderboardEntry
+                {
+                    GameResultId = gameResult.Id,
+                    PlayerName = gameResult.PlayerName,
+                    Score = gameResult.Score,
+                });
+            }
+            catch (Exception exception)
+            {
+                _logger.LogWarning(exception, "排行榜快取寫入失敗，GameResultId：{GameResultId}", gameResult.Id);
+            }
         }
 
         /// <summary>
