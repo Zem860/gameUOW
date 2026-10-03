@@ -13,6 +13,7 @@ if (builder.Environment.IsDevelopment())
 // Add services to the container.
 // 以下是透過擴充方法註冊服務抓取appsetting的設定並開放或注入給di的其他服務使用，方便維護與測試
 builder.Services.AddMongoDbServices(builder.Configuration);
+builder.Services.AddRedisServices(builder.Configuration);
 builder.Services.AddHmacServices(builder.Configuration);
 builder.Services.AddConventionalServices();
 // 系統時鐘：服務一律用 TimeProvider.GetUtcNow() 取時間，測試時可換成假時鐘
