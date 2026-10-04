@@ -64,14 +64,16 @@ namespace Game.Application.Services.Leaderboards
             {
                 throw new KeyNotFoundException($"遊戲不存在或已停用：{code}");
             }
-            // ② 先讀快取：Redis 或記憶體由快取自己決定，這裡不用管
+            // ② 先讀快取：ILeaderboardCache.GetTopAsync 只讀快取、不碰資料庫；
+            //    實際是 Fallback 版（先讀 Redis，失敗改讀記憶體），這裡不用管是哪一個
 
             IReadOnlyList<LeaderboardEntry> cached = await _leaderboardCache.GetTopAsync(game.Id, count);
             if (cached != null && cached.Count > 0)
             {
                 return cached;
             }
-            // ③ 快取是空的（剛啟動、Redis 被清空、或改用記憶體備援）→ 從資料庫一次查上限筆數
+            // ③ 快取是空的（剛啟動、Redis 被清空、或改用記憶體備援）→ 從資料庫一次查上限筆數；
+            //    整個流程只有這裡會讀資料庫（GetTopScoresAsync），其他 GetTopAsync 都只讀快取
             IReadOnlyList<GameResult> results = await _gameResultQueryExecutor.GetTopScoresAsync(game.Id, MaxCount, cancellationToken);
             List<LeaderboardEntry> entries = results.Select(result => new LeaderboardEntry
             {
