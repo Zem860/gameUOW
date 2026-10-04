@@ -48,6 +48,12 @@ namespace Game.Web.Controllers
         /// <param name="count">筆數（1～100，未帶時預設 10）</param>
         /// <param name="cancellationToken">取消權杖</param>
         /// <returns>排行榜成績；沒有任何成績時回傳空陣列</returns>
+        [HttpGet("{code}/leaderboard")]
+        [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<LeaderboardEntry>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<LeaderboardEntry>>),
+StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<LeaderboardEntry>>), StatusCodes.Status404NotFound)]
+
         public async Task<ActionResult<ApiResponse<IReadOnlyList<LeaderboardEntry>>>> GetLeaderboard(string code, [FromQuery] int count = 10, CancellationToken cancellationToken = default)
         {
             IReadOnlyList<LeaderboardEntry> entries = await _leaderboardService.GetTopAsync(code, count, cancellationToken);
