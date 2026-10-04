@@ -8,7 +8,7 @@ namespace Game.Infrastructure.Redis
     /// <summary>
     /// 以 Redis 實作的排行榜快取：Sorted Set 存「gameResultId → 分數」，Hash 存「gameResultId → 玩家名稱」
     /// </summary>
-    public class RedisLeaderboardCache : ILeaderboardCache, IScopedDependency
+    public class RedisLeaderboardCache : ILeaderboardCache, ISingletonDependency
     {
         private readonly IConnectionMultiplexer _redis;
         public RedisLeaderboardCache(IConnectionMultiplexer redis)
