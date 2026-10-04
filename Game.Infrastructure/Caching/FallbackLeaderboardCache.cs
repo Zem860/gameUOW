@@ -31,17 +31,18 @@ namespace Game.Infrastructure.Caching
         /// <param name="gameId">遊戲 Id</param>
         /// <param name="entry">成績</param>
         public async Task AddAsync(string gameId, LeaderboardEntry entry)
-        {
-            try
-            {
-                await _redisCache.AddAsync(gameId, entry);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Redis 寫入排行榜失敗，改寫記憶體快取。GameId={GameId}", gameId);
-                await _memoryCache.AddAsync(gameId, entry);
-            }
-        }
+          {
+              try
+              {
+                  await _redisCache.AddAsync(gameId, entry);
+              }
+              // 不寫記憶體：記憶體只放資料庫查到的整份清單，逐筆加入會讓它變成不完整的清單。
+              // 這筆成績已經在資料庫，記憶體過期後重新查詢就會出現
+              catch (Exception ex)
+              {
+                  _logger.LogWarning(ex, "Redis 寫入排行榜失敗，成績已存入資料庫，稍後重新查詢時會出現。GameId={GameId}", gameId);
+              }
+          }
 
         /// <summary>
         /// 取得分數最高的前 N 筆：先讀 Redis，失敗時記錄警告並改讀記憶體
