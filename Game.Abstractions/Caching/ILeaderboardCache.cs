@@ -21,5 +21,12 @@ namespace Game.Abstractions.Caching
         /// <param name="gameId">遊戲 Id</param>
         /// <param name="count">筆數</param>
         Task<IReadOnlyList<LeaderboardEntry>> GetTopAsync(string gameId, int count);
+
+        /// <summary>
+        /// 整份放入（覆蓋舊的）：從資料庫查到完整清單後補回快取用
+        /// </summary>
+        /// <param name="gameId">遊戲 Id</param>
+        /// <param name="entries">完整清單（分數由高到低）</param>
+        Task SetAllAsync(string gameId, IReadOnlyList<LeaderboardEntry> entries);
     }
 }
