@@ -15,6 +15,9 @@ namespace Game.Abstractions.Caching
         /// <summary>
         /// 取得分數最高的前 N 筆（分數由高到低）；快取沒有資料時回傳空集合
         /// </summary>
+        /// <remarks>
+        /// 只讀快取，不會去讀資料庫；快取是空的時候，由呼叫端改用 IGameResultQueryExecutor.GetTopScoresAsync 查資料庫
+        /// </remarks>
         /// <param name="gameId">遊戲 Id</param>
         /// <param name="count">筆數</param>
         Task<IReadOnlyList<LeaderboardEntry>> GetTopAsync(string gameId, int count);
