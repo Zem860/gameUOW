@@ -65,8 +65,38 @@ namespace Game.Infrastructure.Redis
             }).ToList();
         }
 
+        /// <summary>
+        /// 整份放入：以交易先刪掉舊的分數與名字，再一次寫入整份清單
+        /// </summary>
+        /// <param name="gameId">遊戲 Id</param>
+        /// <param name="entries">完整清單（分數由高到低）</param>
+        public async Task SetAllAsync(string gameId, IReadOnlyList<LeaderboardEntry> entries)
+        {
+            // 沒有任何成績就不寫：保持空的，下次讀取再查資料庫
+            if (entries.Count == 0)
+            {
+                return;
+            }
 
+            IDatabase db = _redis.GetDatabase();
+            ITransaction transaction = db.CreateTransaction();
 
+            // DEL：先清掉舊資料，避免新舊混在一起
+            _ = transaction.KeyDeleteAsync(ScoresKey(gameId));
+            _ = transaction.KeyDeleteAsync(NamesKey(gameId));
+
+            // ZADD / HSET 一次帶多筆，只需要一個指令
+            SortedSetEntry[] scores = entries
+                .Select(entry => new SortedSetEntry(entry.GameResultId, entry.Score))
+                .ToArray();
+            HashEntry[] names = entries
+                .Select(entry => new HashEntry(entry.GameResultId, entry.PlayerName))
+                .ToArray();
+            _ = transaction.SortedSetAddAsync(ScoresKey(gameId), scores);
+            _ = transaction.HashSetAsync(NamesKey(gameId), names);
+
+            await transaction.ExecuteAsync();
+        }
 
         private static string ScoresKey(string gameId) => $"leaderboard:{gameId}";
 

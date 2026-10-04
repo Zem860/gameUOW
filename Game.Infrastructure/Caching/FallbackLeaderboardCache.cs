@@ -63,5 +63,24 @@ namespace Game.Infrastructure.Caching
             }
         }
 
+                  /// <summary>
+          /// 整份放入：先寫 Redis，失敗時記錄警告並改放記憶體
+          /// </summary>
+          /// <param name="gameId">遊戲 Id</param>
+          /// <param name="entries">完整清單（分數由高到低）</param>
+          public async Task SetAllAsync(string gameId, IReadOnlyList<LeaderboardEntry> entries)
+          {
+              try
+              {
+                  await _redisCache.SetAllAsync(gameId, entries);
+              }
+              // 記憶體只在這裡寫入：資料一定是從資料庫查到的完整清單
+              catch (Exception ex)
+              {
+                  _logger.LogWarning(ex, "Redis 寫入完整排行榜失敗，改放記憶體快取。GameId={GameId}", gameId);
+                  await _memoryCache.SetAllAsync(gameId, entries);
+              }
+          }
+
     }
 }

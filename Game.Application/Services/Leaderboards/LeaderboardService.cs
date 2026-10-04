@@ -84,10 +84,7 @@ namespace Game.Application.Services.Leaderboards
 
             // ④ 補回快取，下一個請求就不用再查資料庫
 
-            foreach (LeaderboardEntry entry in entries)
-            {
-                await _leaderboardCache.AddAsync(game.Id, entry);
-            }
+             await _leaderboardCache.SetAllAsync(game.Id, entries);
             // ⑤ 補的是上限筆數，回傳時只取請求要的筆數
             return entries.Take(count).ToList();
         }
