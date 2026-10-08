@@ -8,16 +8,16 @@ namespace Game.Abstractions.Settings
         /// <summary>
         /// 設定節點名稱
         /// </summary>
-        public string SectionName { get; set; } = string.Empty;
+        public const string SectionName = "RateLimiting";
 
         /// <summary>
         /// 開始遊戲（POST /api/games/{code}/start）
         /// </summary>
-        public FixWindowLimitSettings GameStart { get; set; } = new FixWindowLimitSettings();
-        /// <summary>
-        /// 儲存遊戲結果（POST /api/games/{code}/result）
-        /// </summary>
-        public FixWindowLimitSettings GameResult { get; set; } = new FixWindowLimitSettings();
+        public FixedWindowLimitSettings GameStart { get; set; } = new (){PermitLimit = 30};
+          /// <summary>
+          /// 儲存遊戲結果（POST /api/game-results）
+          /// </summary>
+        public FixedWindowLimitSettings GameResult { get; set; } = new FixedWindowLimitSettings() {PermitLimit = 10};
 
     }
 }
