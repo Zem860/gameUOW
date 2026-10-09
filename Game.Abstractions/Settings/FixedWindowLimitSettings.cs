@@ -12,7 +12,7 @@ namespace Game.Abstractions.Settings
         /// <summary>
         /// 視窗長度（秒）
         /// </summary>
-        public int WindowSeconds { get; set; }
+        public int WindowSeconds { get; set; } = 60;
     }
 
 }

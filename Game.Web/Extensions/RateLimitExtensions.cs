@@ -13,13 +13,21 @@ namespace Game.Web.Extensions
     {
         // 取不到 IP 時的共用分組（極少發生，例如測試環境）
         private const string UnknownClientIp = "unknown";
+
+        /// <summary>
+        /// 註冊請求限流：每個 policy 依 IP 分組、固定視窗計數，超過回 429 + ApiResponse
+        /// </summary>
+        /// <param name="services">服務集合</param>
+        /// <param name="configuration">配置</param>
+        /// <returns>服務集合（支援鏈式呼叫）</returns>
+        /// <exception cref="InvalidOperationException">次數或秒數不是正數時，於啟動時拋出</exception>
         public static IServiceCollection AddRateLimitingServices(this IServiceCollection services, IConfiguration configuration)
         {
             // ① json 的 "RateLimiting" 區塊 → 依屬性名稱填成 RateLimitSettings
             RateLimitSettings settings = configuration.GetSection(RateLimitSettings.SectionName).Get<RateLimitSettings>() ?? new RateLimitSettings();
             ValidateLimit(nameof(settings.GameStart), settings.GameStart);
             ValidateLimit(nameof(settings.GameResult), settings.GameResult);
-            // ② policy 名稱（常數）配上它的數字（設定）
+
             services.AddRateLimiter(options =>
             {
                 // ② policy 名稱（常數）配上它的數字（設定）
@@ -65,7 +73,7 @@ namespace Game.Web.Extensions
         {
             if (limit.PermitLimit <= 0 || limit.WindowSeconds <= 0)
             {
-                throw new InvalidOperationException($"'{RateLimitSettings.SectionName}:{name}' PermitLimit and WindowSeconds must bepositive.");
+                throw new InvalidOperationException($"'{RateLimitSettings.SectionName}:{name}' PermitLimit and WindowSeconds must be positive.");
             }
         }
     }
