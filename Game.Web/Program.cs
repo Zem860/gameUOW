@@ -16,6 +16,7 @@ builder.Services.AddMongoDbServices(builder.Configuration);
 builder.Services.AddRedisServices(builder.Configuration);
 builder.Services.AddMemoryCache();
 builder.Services.AddHmacServices(builder.Configuration);
+builder.Services.AddRateLimitingServices(builder.Configuration);
 builder.Services.AddConventionalServices();
 // 系統時鐘：服務一律用 TimeProvider.GetUtcNow() 取時間，測試時可換成假時鐘
 builder.Services.AddSingleton(TimeProvider.System);
