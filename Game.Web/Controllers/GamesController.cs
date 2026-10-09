@@ -3,6 +3,8 @@ using Game.Abstractions.Dtos.Game;
 using Game.Abstractions.Dtos.Leaderboard;
 using Game.Abstractions.IApplication;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Game.Domain.Constants;
 
 namespace Game.Web.Controllers
 {
@@ -33,6 +35,8 @@ namespace Game.Web.Controllers
         /// <param name="cancellationToken">取消權杖</param>
         /// <returns>遊戲票券</returns>
         [HttpPost("{code}/start")]
+        [EnableRateLimiting(RateLimitPolicyNames.GameStart)]
+        [ProducesResponseType(typeof(ApiResponse<StartGameResponse>), StatusCodes.Status429TooManyRequests)]
         [ProducesResponseType(typeof(ApiResponse<StartGameResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<StartGameResponse>), StatusCodes.Status404NotFound)]
         public async Task<ActionResult<ApiResponse<StartGameResponse>>> Start(string code, CancellationToken cancellationToken)

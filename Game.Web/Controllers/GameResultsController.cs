@@ -2,6 +2,8 @@ using Game.Abstractions.Common;
 using Game.Abstractions.Dtos.Game;
 using Game.Abstractions.IApplication;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Game.Domain.Constants;
 
 namespace Game.Web.Controllers
 {
@@ -29,6 +31,8 @@ namespace Game.Web.Controllers
         /// <param name="cancellationToken">取消權杖</param>
         /// <returns>已儲存的遊戲結果識別碼</returns>
         [HttpPost]
+        [EnableRateLimiting(RateLimitPolicyNames.GameResult)]
+        [ProducesResponseType(typeof(ApiResponse<CreateGameResultResponse>), StatusCodes.Status429TooManyRequests)]
         [ProducesResponseType(typeof(ApiResponse<CreateGameResultResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiResponse<CreateGameResultResponse>), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiResponse<CreateGameResultResponse>), StatusCodes.Status401Unauthorized)]
