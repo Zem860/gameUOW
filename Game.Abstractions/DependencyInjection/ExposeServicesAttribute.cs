@@ -35,16 +35,6 @@ namespace Game.Abstractions.DependencyInjection
         public Type[] ServiceTypes { get; }
 
         /// <summary>
-        /// 是否也用類別本身登記（保留欄位，註冊程式目前未讀取）
-        /// </summary>
-        public bool IncludeSelf { get; set; }
-
-        /// <summary>
-        /// 是否也登記預設會登記的介面（保留欄位，註冊程式目前未讀取）
-        /// </summary>
-        public bool IncludeDefaults { get; set; }
-
-        /// <summary>
         /// 建立標籤
         /// </summary>
         /// <param name="serviceTypes">要登記的服務介面，可傳多個</param>
