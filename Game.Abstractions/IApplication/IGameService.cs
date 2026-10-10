@@ -8,6 +8,14 @@ namespace Game.Abstractions.IApplication
     public interface IGameService
     {
         /// <summary>
+        /// 取得遊戲菜單：啟用中的遊戲（依名稱排序）
+        /// </summary>
+        /// <param name="cancellationToken">取消權杖</param>
+        /// <returns>遊戲清單；沒有啟用中的遊戲時回傳空陣列</returns>
+
+        Task<IReadOnlyList<GameMenuItem>> GetMenuItemsAsync(CancellationToken cancellationToken);
+
+        /// <summary>
         /// 開始遊戲：確認遊戲存在且啟用，簽發遊戲票券（不寫入資料庫）
         /// </summary>
         /// <param name="code">遊戲代碼（例如 snake）</param>
