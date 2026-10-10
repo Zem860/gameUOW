@@ -16,6 +16,10 @@ namespace Game.Infrastructure.MongoDb.Repositories
 
         private readonly MongoDbContext _context;
 
+        /// <summary>
+        /// 建立唯讀 Repository
+        /// </summary>
+        /// <param name="context">Mongo 連線內容（依 Entity 型別取得 collection）</param>
         public ReadRepository(MongoDbContext context)
         {
             _context = context;
@@ -25,7 +29,12 @@ namespace Game.Infrastructure.MongoDb.Repositories
         private IMongoCollection<TEntity> Collection =>
             _context.GetCollection<TEntity>().WithReadPreference(ReadPreference.SecondaryPreferred);
 
-        /// <inheritdoc />
+        /// <summary>
+        /// 依 Id 取得資料
+        /// </summary>
+        /// <param name="id">資料 Id</param>
+        /// <param name="cancellationToken">取消權杖</param>
+        /// <returns>找到的資料；找不到或 Id 格式不符時回傳 null</returns>
         public async Task<TEntity?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
         {
             try
@@ -41,7 +50,12 @@ namespace Game.Infrastructure.MongoDb.Repositories
             }
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// 依條件取得第一筆資料
+        /// </summary>
+        /// <param name="predicate">查詢條件（由 Driver 翻譯成 Mongo filter，在資料庫端過濾）</param>
+        /// <param name="cancellationToken">取消權杖</param>
+        /// <returns>第一筆符合條件的資料；沒有符合時回傳 null</returns>
         public async Task<TEntity?> FirstOrDefaultAsync(
             Expression<Func<TEntity, bool>> predicate,
             CancellationToken cancellationToken = default)
@@ -49,13 +63,22 @@ namespace Game.Infrastructure.MongoDb.Repositories
             return await Collection.Find(predicate).FirstOrDefaultAsync(cancellationToken);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// 取得全部資料（不加條件）
+        /// </summary>
+        /// <param name="cancellationToken">取消權杖</param>
+        /// <returns>全部資料；collection 為空時回傳空清單</returns>
         public async Task<List<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             return await Collection.Find(FilterDefinition<TEntity>.Empty).ToListAsync(cancellationToken);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// 依條件取得資料清單
+        /// </summary>
+        /// <param name="predicate">查詢條件（由 Driver 翻譯成 Mongo filter，在資料庫端過濾）</param>
+        /// <param name="cancellationToken">取消權杖</param>
+        /// <returns>符合條件的資料；沒有符合時回傳空清單</returns>
         public async Task<List<TEntity>> GetListAsync(
             Expression<Func<TEntity, bool>> predicate,
             CancellationToken cancellationToken = default)
@@ -63,14 +86,23 @@ namespace Game.Infrastructure.MongoDb.Repositories
             return await Collection.Find(predicate).ToListAsync(cancellationToken);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// 計算資料總數
+        /// </summary>
+        /// <param name="cancellationToken">取消權杖</param>
+        /// <returns>資料筆數</returns>
         public async Task<int> CountAsync(CancellationToken cancellationToken = default)
         {
             return (int)await Collection.CountDocumentsAsync(FilterDefinition<TEntity>.Empty, cancellationToken:
 cancellationToken);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// 依條件計算資料總數
+        /// </summary>
+        /// <param name="predicate">查詢條件</param>
+        /// <param name="cancellationToken">取消權杖</param>
+        /// <returns>符合條件的資料筆數</returns>
         public async Task<int> CountAsync(
             Expression<Func<TEntity, bool>> predicate,
             CancellationToken cancellationToken = default)
@@ -78,7 +110,12 @@ cancellationToken);
             return (int)await Collection.CountDocumentsAsync(predicate, cancellationToken: cancellationToken);
         }
 
-        /// <inheritdoc />
+        /// <summary>
+        /// 檢查是否存在符合條件的資料（找到一筆就停止）
+        /// </summary>
+        /// <param name="predicate">查詢條件</param>
+        /// <param name="cancellationToken">取消權杖</param>
+        /// <returns>存在時回傳 true</returns>
         public async Task<bool> AnyAsync(
             Expression<Func<TEntity, bool>> predicate,
             CancellationToken cancellationToken = default)
