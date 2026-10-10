@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+**/*.local.json
+.env
+
+# IDE / git
+**/.vs/
+**/.vscode/
+**/*.user
+.git/
+.gitignore
+
+# Docker 自己的檔案不用打包進 image
+compose.yml
+**/Dockerfile
+.dockerignore
