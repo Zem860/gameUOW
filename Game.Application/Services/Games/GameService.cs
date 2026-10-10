@@ -55,6 +55,22 @@ namespace Game.Application.Services.Games
             _leaderboardCache = leaderboardCache;
             _logger = logger;
         }
+        /// <summary>
+        /// 取得遊戲菜單：啟用中的遊戲（依名稱排序）
+        /// </summary>
+        /// <param name="cancellationToken">取消權杖</param>
+        /// <returns>遊戲清單；沒有啟用中的遊戲時回傳空陣列</returns>
+        public async Task<IReadOnlyList<GameMenuItem>> GetMenuItemsAsync(CancellationToken cancellationToken)
+        {
+            List<GameInfo> games = await _gameRepository.GetListAsync(game => game.IsActive, cancellationToken);
+            return games.OrderBy(game => game.DisplayName).Select(game => new GameMenuItem
+            {
+                Code = game.Code,
+                DisplayName = game.DisplayName,
+            }).ToList();
+        }
+
+
 
         /// <summary>
         /// 開始遊戲：確認遊戲存在且啟用，簽發遊戲票券（不寫入資料庫）

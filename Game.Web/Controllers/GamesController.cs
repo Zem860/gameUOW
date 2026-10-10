@@ -27,6 +27,19 @@ namespace Game.Web.Controllers
             _gameService = gameService;
             _leaderboardService = leaderboardService;
         }
+        /// <summary>
+        /// 取得遊戲菜單：啟用中的遊戲清單
+        /// </summary>
+        /// <param name="cancellationToken">取消權杖</param>
+        /// <returns>遊戲清單；沒有啟用中的遊戲時回傳空陣列</returns>
+        /// 
+        [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<IReadOnlyList<GameMenuItem>>), StatusCodes.Status200OK)]
+        public async Task<ActionResult<ApiResponse<IReadOnlyList<GameMenuItem>>>> GetMenuItems(CancellationToken cancellationToken)
+        {
+            IReadOnlyList<GameMenuItem> menuItems = await _gameService.GetMenuItemsAsync(cancellationToken);
+            return BusinessOkResponse(menuItems);
+        }
 
         /// <summary>
         /// 開始遊戲，取得遊戲票券（不寫入資料庫）
