@@ -1,3 +1,5 @@
+// EasterEgg -> 1/9【啟動】註冊驗證與授權（搜尋「EasterEgg -> 1」找到相關的兩處）
+// 下一步 -> 2：Extensions/AuthExtensions.cs
 using Game.Web.Extensions;
 using Game.Web.Middlewares;
 
@@ -18,6 +20,8 @@ builder.Services.AddMemoryCache();
 builder.Services.AddHmacServices(builder.Configuration);
 builder.Services.AddRateLimitingServices(builder.Configuration);
 builder.Services.AddCorsServices(builder.Configuration);
+// EasterEgg -> 1：註冊假登入方案、彩蛋 Policy、授權 Handler（內容見 2）
+builder.Services.AddAuthServices();
 builder.Services.AddConventionalServices();
 // 系統時鐘：服務一律用 TimeProvider.GetUtcNow() 取時間，測試時可換成假時鐘
 builder.Services.AddSingleton(TimeProvider.System);
@@ -45,6 +49,10 @@ app.UseCors();
 
 app.UseRateLimiter();
 
+// 先知道你是誰（填好 HttpContext.User），再判斷你能不能呼叫；順序不能反
+// EasterEgg -> 1：請求進來時，這行會執行 5 的假登入
+app.UseAuthentication();
+// EasterEgg -> 1：這行會讀 6 的標籤，用 7、8 判斷能不能進 9
 app.UseAuthorization();
 
 app.MapControllers();
